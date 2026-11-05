@@ -1,0 +1,7 @@
+# Python 3.11. Versions are the ones the data-free checks were last run with.
+torch==2.5.1
+numpy==2.4.3
+matplotlib==3.10.8
+tqdm==4.67.3
+torch-harmonics==0.8.0   # SFNO only (spherical harmonic transforms)
+# mpi4py is needed only by SFNO/preprocess_forecast.py, which runs on the cluster.

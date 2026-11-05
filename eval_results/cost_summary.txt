@@ -1,0 +1,9 @@
+
+==================================================
+ Computational Cost
+==================================================
+  Total parameters:     35,656,496 (35.66M)
+  Trainable parameters: 35,656,496 (35.66M)
+  Est. 3D U-NO params:  80.23M (2.25x factor)
+  Inference time:       116.2 ms/step
+  Physical time/step:   25 R_g/c

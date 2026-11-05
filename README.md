@@ -9,7 +9,7 @@ trained, evaluated model on national HPC systems (NCSA Delta and NERSC Perlmutte
 
 | Model | Status | Where |
 |---|---|---|
-| **Vision transformer (ViT)** | Current model, under active development | [`Fall26/`](Fall26/) |
+| **Vision transformer (ViT)** | Current model, under active development | [`3Dtransformer/`](3Dtransformer/) |
 | **Spherical Fourier neural operator (SFNO)** | **Retired** in favour of the transformer; kept with its evaluation results | [`SFNO/`](SFNO/), [`eval/`](eval/), [`eval_results/`](eval_results/) |
 
 ## The problem
@@ -30,7 +30,7 @@ changes), a baseline that is hard to beat when a single step changes little.
 ## Repository layout
 
 ```text
-Fall26/                 the transformer (current work); Fall26/README.md has the details
+3Dtransformer/          the transformer (current work); 3Dtransformer/README.md has the details
   vit/                  model, experiment registry, distributed training loop
   common/               data loading, normalization, physics-informed loss
   data/                 preprocessing of the raw simulation output, with a cross-check
@@ -45,7 +45,7 @@ eval_results/           SFNO evaluation output (tables as .txt, figures as .png)
 
 ## The transformer (current model)
 
-[`Fall26/vit/model.py`](Fall26/vit/model.py) adapts the vision transformer to 3D physical fields.
+[`3Dtransformer/vit/model.py`](3Dtransformer/vit/model.py) adapts the vision transformer to 3D physical fields.
 
 - **Patch tokens on a spherical grid.** The grid is cut into 4 × 4 × 4 patches, and each patch
   becomes one token holding all 8 variables: 8,064 tokens. Full self-attention then relates every
@@ -62,25 +62,25 @@ eval_results/           SFNO evaluation output (tables as .txt, figures as .png)
 - **Physics-informed loss with a curriculum.** Training starts on reconstruction error alone. Terms
   for ∇·B and per-shell mass conservation are then ramped in, alongside gradient and spectral terms
   and guards that keep velocities below the speed of light. Several fixes to the inherited loss are
-  documented in [`common/physics_loss.py`](Fall26/common/physics_loss.py); for example, the mass term
+  documented in [`common/physics_loss.py`](3Dtransformer/common/physics_loss.py); for example, the mass term
   originally gave almost all its weight to the outermost shells.
 - **~63M parameters**, trained with AdamW, warmup and cosine decay.
 
 The engineering around the model is built for long runs on shared clusters:
 
 - **Reproducible experiments.** Every hyperparameter lives in a named, never-edited entry of an
-  experiment registry ([`vit/config.py`](Fall26/vit/config.py)). Each run saves its full
+  experiment registry ([`vit/config.py`](3Dtransformer/vit/config.py)). Each run saves its full
   configuration and refuses to resume if the experiment has changed since.
 - **Fault-tolerant distributed training.** Multi-GPU DDP via `torchrun`. Chains of 48-hour Slurm jobs
   resume from checkpoints automatically, and the data loader retries transient file-system errors.
-- **Data pipeline.** [`data/preprocess_rc300.py`](Fall26/data/preprocess_rc300.py) turns the raw
+- **Data pipeline.** [`data/preprocess_rc300.py`](3Dtransformer/data/preprocess_rc300.py) turns the raw
   simulation output into training data: 9,636 snapshots, 149 GB, written in under two minutes on
   Perlmutter. It is validated against the simulation code's own reader, and its decisions (cropping,
   resolution, train/validation/test split) are recorded in
-  [`docs/rc300_preprocessing.md`](Fall26/docs/rc300_preprocessing.md).
+  [`docs/rc300_preprocessing.md`](3Dtransformer/docs/rc300_preprocessing.md).
 - **Evaluation on unseen data.** The last 10% of the simulation is a blind test period. The suite
   reports per-variable accuracy and skill against persistence, multi-step rollouts and the physics
-  diagnostics. [`docs/reading_the_evaluation.md`](Fall26/docs/reading_the_evaluation.md) explains
+  diagnostics. [`docs/reading_the_evaluation.md`](3Dtransformer/docs/reading_the_evaluation.md) explains
   how to read each table.
 
 ### Active areas of improvement
@@ -135,14 +135,14 @@ synthetic data:
 ```bash
 pip install -r requirements.txt
 
-python Fall26/smoke_test.py     # transformer: 42 checks of the model, training loop,
+python 3Dtransformer/smoke_test.py     # transformer: 42 checks of the model, training loop,
                                 # checkpoint/resume and both normalizations (about a minute)
 python eval/smoke_test.py       # SFNO: physics loss components and loss logging
 ```
 
 Training and evaluation need the preprocessed data and GPUs. To run the transformer on real data,
 set `GRMHD_DATA_ROOT` to the folder holding the preprocessed datasets. The Slurm job scripts in
-`Fall26/scripts/`, `SFNO/` and `eval/` are templates: set `--account` to your own allocation, and
+`3Dtransformer/scripts/`, `SFNO/` and `eval/` are templates: set `--account` to your own allocation, and
 replace the `/path/to/...` placeholders.
 
 ## Credits
@@ -151,7 +151,7 @@ replace the `/path/to/...` placeholders.
   loss and evaluation suite the transformer reuses, and the convolutional baseline the SFNO was
   built on. Every file that contains his code says so in its header.
 - **H-AMR.** The simulation data was produced by collaborators with H-AMR and is not included. The
-  preprocessing in `Fall26/data/` is checked against H-AMR's own data reader. If you use this work,
+  preprocessing in `3Dtransformer/data/` is checked against H-AMR's own data reader. If you use this work,
   please cite:
 
   > Liska, M. T. P., Chatterjee, K., Issa, D., et al. 2022, "H-AMR: A New GPU-accelerated GRMHD Code

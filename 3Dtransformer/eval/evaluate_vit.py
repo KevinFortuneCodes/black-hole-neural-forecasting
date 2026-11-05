@@ -14,10 +14,10 @@ conditional error, Lipschitz) always use TRON's arcsinh normalization, so runs w
 normalizations get comparable numbers.
 
 Defaults come from the experiment: the blind test set in <data_dir>/blind, the run's best.pth,
-and results in Fall26/outputs/<experiment>/seed<N>/eval/<checkpoint>_blind/. Before TRON's suite it
+and results in 3Dtransformer/outputs/<experiment>/seed<N>/eval/<checkpoint>_blind/. Before TRON's suite it
 plots the run's training and validation curves there too (plot_training.py; training_curves.txt).
 From the repo root:
-    python Fall26/eval/evaluate_vit.py --experiment vit_rc300_v1 --mode all --max_steps 50
+    python 3Dtransformer/eval/evaluate_vit.py --experiment vit_rc300_v1 --mode all --max_steps 50
 Every other argument (--mode, --max_steps, --n_starts, --start, ...) goes to TRON's evaluator.
 """
 import argparse
@@ -30,7 +30,7 @@ import numpy as np
 import torch
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parent))   # make Fall26/ importable
+sys.path.insert(0, str(HERE.parent))   # make 3Dtransformer/ importable
 
 from common.normalizer import DataNormalizer, build_normalizer, load_geometry
 from common.physics_loss import PhysicsLoss3D

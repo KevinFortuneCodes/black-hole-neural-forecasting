@@ -3,13 +3,13 @@
 """Smoke tests for the ViT baseline.
 
 Synthetic (default, runs on CPU in about a minute):
-    python Fall26/smoke_test.py
+    python 3Dtransformer/smoke_test.py
   Builds a tiny fake dataset and checks the model (shapes, parameter count, Δ = 0 at
   start, padding, positional encoding, bf16 path, per-step backward) and the training
   loop (checkpoints, metrics, resume, early stopping).
 
 Real data on one Delta GPU (see scripts/smoke_delta.sbatch):
-    python Fall26/smoke_test.py --real [--experiment vit_rc300_v1] [--batch-size 8] [--steps 5]
+    python 3Dtransformer/smoke_test.py --real [--experiment vit_rc300_v1] [--batch-size 8] [--steps 5]
   Runs full-size training steps on real dumps and reports time per step, peak GPU
   memory and the estimated epoch time on a 4-GPU node.
 """
@@ -25,7 +25,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))   # make Fall26/ importable
+sys.path.insert(0, str(Path(__file__).resolve().parent))   # make 3Dtransformer/ importable
 
 from vit.config import CONFIG, DEFAULT_EXPERIMENT, EXPERIMENTS, eval_dir, experiment_config, run_dir
 from vit.model import ViTForecaster, build_model, patch_centres, sinusoidal_encoding

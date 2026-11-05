@@ -3,9 +3,9 @@
 """Train one seed of one experiment (see EXPERIMENTS in vit/config.py).
 
 On Delta (see scripts/train_delta.sbatch), one node with 4 GPUs:
-    torchrun --standalone --nproc_per_node=4 Fall26/vit/train.py --experiment vit_baseline_v1 --seed 0
+    torchrun --standalone --nproc_per_node=4 3Dtransformer/vit/train.py --experiment vit_baseline_v1 --seed 0
 Without torchrun it runs as a single process on one GPU or the CPU (the smoke test does this).
-Outputs go to Fall26/outputs/<experiment>/seed<N>/; rerunning the same command resumes there.
+Outputs go to 3Dtransformer/outputs/<experiment>/seed<N>/; rerunning the same command resumes there.
 """
 import argparse
 import contextlib
@@ -27,7 +27,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DataLoader, Subset
 from torch.utils.data.distributed import DistributedSampler
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))   # make Fall26/ importable
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))   # make 3Dtransformer/ importable
 
 from common.data import HAMRForecastDataset, list_dumps, split_train_val
 from common.normalizer import build_normalizer, check_normalizer_constants, load_geometry

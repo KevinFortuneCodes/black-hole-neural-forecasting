@@ -4,8 +4,8 @@
 # Preprocess the rc300 reduced run on one Perlmutter CPU node.
 #
 # Submit from the repo root, after the login-node test (doc section 5):
-#   mkdir -p Fall26/outputs/slurm
-#   sbatch Fall26/scripts/preprocess_rc300_perlmutter.sbatch
+#   mkdir -p 3Dtransformer/outputs/slurm
+#   sbatch 3Dtransformer/scripts/preprocess_rc300_perlmutter.sbatch
 # Arguments after the script name go to preprocess_rc300.py, e.g. --set r_max=null.
 # Set --account to your NERSC allocation (sacctmgr show assoc user=$USER format=account).
 # Reruns skip dumps that are already written, so a job that hits the time limit can just be resubmitted.
@@ -17,9 +17,9 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=256
 #SBATCH --time=02:00:00
-#SBATCH --output=Fall26/outputs/slurm/%x_%j.log
+#SBATCH --output=3Dtransformer/outputs/slurm/%x_%j.log
 
 set -euo pipefail
 module load python
 export OMP_NUM_THREADS=1
-python -u Fall26/data/preprocess_rc300.py --workers "${WORKERS:-64}" "$@"
+python -u 3Dtransformer/data/preprocess_rc300.py --workers "${WORKERS:-64}" "$@"

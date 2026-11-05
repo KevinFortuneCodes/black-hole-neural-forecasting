@@ -2,12 +2,12 @@
 
 **Purpose.** This document holds everything needed to write (and now maintain) the preprocessing script that turns the
 raw H-AMR simulation `ml_data_rc300` (on NERSC Perlmutter) into training data for the models in
-`Fall26/`. It is self-contained: it records what was learned by inspecting the files, which tools
+`3Dtransformer/`. It is self-contained: it records what was learned by inspecting the files, which tools
 read them, what the training code expects, and what is still open.
 
 **Status (2026-10-17).**
 - The raw format is fully decoded and checked against the physics (see "Raw format").
-- **The preprocessed data exists** (`Fall26/data/preprocess_rc300.py`, section 5): Perlmutter job
+- **The preprocessed data exists** (`3Dtransformer/data/preprocess_rc300.py`, section 5): Perlmutter job
   59960339 (2026-10-18) wrote all 9,636 dumps to `/path/to/scratch/rc300_reduced` (149 GB) in
   98 s with no failed dumps and no failed checks. The script also agrees exactly with H-AMR's own reader.
   Next: copy it to Delta (section 9).
@@ -44,7 +44,7 @@ H-AMR's own reader source, not yet exercised), or **[open]** (unknown; must be c
 
 ## Decisions and script settings
 
-**The script is written:** `Fall26/data/preprocess_rc300.py` (section 5 has how to run it). Every
+**The script is written:** `3Dtransformer/data/preprocess_rc300.py` (section 5 has how to run it). Every
 decision is a setting in its `PREPROCESS` block, which is the single source of truth; override any
 with `--set KEY=VALUE` (JSON values, e.g. `--set r_max=null`, `--set theta_deg=[30,150]`). The
 settings used are saved to `out_dir/preprocess_config.json`, and a rerun into the same folder with
@@ -71,7 +71,7 @@ With these settings the reduced run gives 9,636 dumps (3000–12635):
 | Validation | 10708–11671 | 964 |
 | Test | 11672–12635 | 964 |
 
-**Fitting the splits to the training code.** `Fall26/common/data.py` takes one folder and splits it
+**Fitting the splits to the training code.** `3Dtransformer/common/data.py` takes one folder and splits it
 chronologically with the experiment's `val_frac`; it does not look in subfolders. So:
 - write train and validation dumps to `out_dir/`, and test dumps to `out_dir/blind/`;
 - set the experiment's `val_frac` to val / (train + val) = **1/9**, not 0.1. The script prints the
@@ -106,7 +106,7 @@ Local copies of all three are on Kevin's laptop at `C:\Users\fortu\Dropbox\PC (3
 They are third-party code; don't commit them to this repo.
 
 **Training machine: NCSA Delta.** Repo clone at `~/black-hole-neural-forecasting`; outputs
-at `/path/to/work/fall26_outputs`, linked as `Fall26/outputs`. Delta's `/work` is shared
+at `/path/to/work/transformer_outputs`, linked as `3Dtransformer/outputs`. Delta's `/work` is shared
 with DeltaAI. The default `/work/hdd` quota is about 1 TB, shared by the whole allocation.
 
 ## 3. The two datasets [verified unless marked]
@@ -262,7 +262,7 @@ int32    n_active_total × (n_ord, TIMELEVEL, NODE)
   and `PhysicsLoss3D.calc_divB` takes central differences of it. Normalized ∇·B (|∇·B| Δx / |B|) in the
   active disk: full run median 0.19 (mean 0.61); reduced run median 2.2 (mean 6.0), because keeping every
   4th cell leaves B poorly resolved. So ∇·B must be compared with the truth's, never with zero:
-  `Fall26/common/physics_loss.py` now penalizes |∇·B(pred) − ∇·B(truth)|, and the eval should report the
+  `3Dtransformer/common/physics_loss.py` now penalizes |∇·B(pred) − ∇·B(truth)|, and the eval should report the
   same error (to do when the eval is ported).
 - **Velocity: values 2–5 are the coordinate 4-velocity (u⁰, u¹, u², u³)** [verified on both runs].
   - Test: with u = (value 2, values 3–5), g_μν u^μ u^ν = −1 holds to ~1e-7 in every cell (99th
@@ -278,7 +278,7 @@ int32    n_active_total × (n_ord, TIMELEVEL, NODE)
 
 ## 5. Running the preprocessing, and `pp`
 
-**The script (`Fall26/data/preprocess_rc300.py`) reads the raw files directly with numpy** (sections
+**The script (`3Dtransformer/data/preprocess_rc300.py`) reads the raw files directly with numpy** (sections
 4.1–4.4), so it needs only `module load python`, not `pp`. Per dump it reads the 8 `new_dump` files,
 sorts blocks by ID, checks positivity and the velocity identity, places every block on the finest
 grid (copying or interpolating unrefined blocks), coarsens if `lowres > 1`, crops, and writes float32.
@@ -291,14 +291,14 @@ loading the output with the training code.
 
 ```bash
 cd $HOME && git clone https://github.com/KevinFortuneCodes/black-hole-neural-forecasting.git
-cd black-hole-neural-forecasting && mkdir -p Fall26/outputs/slurm
+cd black-hole-neural-forecasting && mkdir -p 3Dtransformer/outputs/slurm
 ```
 
 **2. Test on three dumps on a login node** (one train, one adjacent, one test dump):
 
 ```bash
 module load python
-python Fall26/data/preprocess_rc300.py --set out_dir=$SCRATCH/rc300_test --dumps 3000 3001 12635 --workers 3
+python 3Dtransformer/data/preprocess_rc300.py --set out_dir=$SCRATCH/rc300_test --dumps 3000 3001 12635 --workers 3
 cat $SCRATCH/rc300_test/checks.json
 ```
 
@@ -310,13 +310,13 @@ geometry to float32 precision.
 
 ```bash
 conda activate pp311
-python Fall26/data/check_against_pp.py --pp-dir $SCRATCH/pp_rc300 --dump 3000
+python 3Dtransformer/data/check_against_pp.py --pp-dir $SCRATCH/pp_rc300 --dump 3000
 ```
 
 **4. Full run** on one CPU node (about 570 GB of reading and writing; reruns skip finished dumps):
 
 ```bash
-sbatch Fall26/scripts/preprocess_rc300_perlmutter.sbatch
+sbatch 3Dtransformer/scripts/preprocess_rc300_perlmutter.sbatch
 ```
 
 Then copy `$SCRATCH/rc300_reduced` to `delta_dir` with Globus (section 9) and point the training
@@ -468,7 +468,7 @@ identically; `rgdump_griddata` does this when called with the same settings.
 | 112 × 24 × 48 (reduced, base, `lowres = 2`) | 4.1 MB | 52 GB |
 
   Cropping reduces these in proportion to the cells kept.
-- **Model compatibility.** The ViT tokenizes 3D patches (`patch` in `Fall26/vit/config.py`), so each
+- **Model compatibility.** The ViT tokenizes 3D patches (`patch` in `3Dtransformer/vit/config.py`), so each
   grid dimension should divide by the patch size; otherwise the model pads. Attention cost grows with
   the square of the number of patches.
 - **Crop options for the chosen setup** (reduced run, finest grid 224 × 48 × 96, dumps 3000–12635).
@@ -499,7 +499,7 @@ identically; `rgdump_griddata` does this when called with the same settings.
     linear interpolation from the coarser level, smooth but inventing detail. Either way, discrete
     gradients and ∇·B there are not exact; `checks.json` reports ∇·B separately for those cells.
 - **Why not r ≈ 52,900: what that crop does to the training loss** [verified on dumps 3000/3001 and 12634/12635;
-  figures in `Fall26/outputs/figures/`, not in git]. Inside r ≈ 150 are 45% of the cells but 87–95% of
+  figures in `3Dtransformer/outputs/figures/`, not in git]. Inside r ≈ 150 are 45% of the cells but 87–95% of
   the one-step density change; beyond r ≈ 1,050 are 36% of the cells and 1–2% of the change. That
   matters differently per loss term:
   - **Cell-averaged terms** (reconstruction, gradient): quiet cells add almost nothing once "no change"
@@ -511,16 +511,16 @@ identically; `rgdump_griddata` does this when called with the same settings.
     1.6e3 at r = 10 and 2e14 at r = 5e4). At this crop the gate is 6e-8 at r = 100 and half of its weight
     lies beyond r ≈ 42,000, so this term effectively ignores the disk. At a crop of r ≈ 150 the same
     gate puts half its weight beyond r ≈ 100, and at the chosen r ≈ 1,050 beyond r ≈ 780. **Fixed
-    (2026-10-18):** `Fall26/common/physics_loss.py` now weights every shell equally.
+    (2026-10-18):** `3Dtransformer/common/physics_loss.py` now weights every shell equally.
 - **Time pairing.** If both resolutions are processed, keep native dump numbers and record each dump's
   `t`, and pair by time (section 3): full *k* ↔ reduced 10*k* only holds for the first ~10 dumps.
 
 ## 7. What the training code expects (output contract)
 
-Read by `Fall26/common/data.py`, `Fall26/common/normalizer.py`, `Fall26/common/physics_loss.py` and
-`Fall26/vit/train.py`.
+Read by `3Dtransformer/common/data.py`, `3Dtransformer/common/normalizer.py`, `3Dtransformer/common/physics_loss.py` and
+`3Dtransformer/vit/train.py`.
 
-**One folder per dataset** (point `data_dir` in a `Fall26/vit/config.py` experiment at it) containing:
+**One folder per dataset** (point `data_dir` in a `3Dtransformer/vit/config.py` experiment at it) containing:
 
 **`dump_<N>.npy`**, one per dump:
 - `<N>` is the native H-AMR dump number. Files are sorted numerically, and the **chronological** 90/10
@@ -566,7 +566,7 @@ Run these on the first few dumps before processing everything:
    once, or averaged when `lowres > 1`.
 5. **Cross-resolution check (if both runs are processed):** a full dump subsampled `[::4, ::4, ::4]` (not averaged) should
    match the reduced dump at the same `t` (section 3; not reduced 10*k* in general).
-6. **Grid consistency:** every dump's array shape equals `geometry.npz`'s `r.shape`, and `Fall26/vit/train.py`'s
+6. **Grid consistency:** every dump's array shape equals `geometry.npz`'s `r.shape`, and `3Dtransformer/vit/train.py`'s
    startup assertion passes.
 
 Raw-file self-check (verified on both runs; it reproduces the table in 4.2):
@@ -657,8 +657,8 @@ for R, ds in ((f"{B}/reduced", (0, 1000, 6000, 12000)), (B, (0, 100, 600, 1200))
   same 9,641 files and sizes, checksum sample identical). Use `/work/nvme`, not `/work/hdd`: some GPU nodes
   (gpua016) returned I/O errors on 14 of 150 rc300 files on `/work/hdd` that read fine elsewhere, and
   `/work/nvme` loads a training batch in about 0.1 s against 3.4 s. The `/work/hdd` copy is now redundant.
-- Keep the scripts in `Fall26/` (for example `Fall26/data/preprocess_rc300.py` plus a Perlmutter job
-  script), following the existing style in `Fall26/common/` and `Fall26/scripts/`.
+- Keep the scripts in `3Dtransformer/` (for example `3Dtransformer/data/preprocess_rc300.py` plus a Perlmutter job
+  script), following the existing style in `3Dtransformer/common/` and `3Dtransformer/scripts/`.
 
 ## 10. Open questions
 
@@ -673,7 +673,7 @@ for R, ds in ((f"{B}/reduced", (0, 1000, 6000, 12000)), (B, (0, 100, 600, 1200))
 
 ## 11. References
 
-- `Fall26/common/` (data, normalizer, physics loss) and `Fall26/vit/` (model, training, config):
+- `3Dtransformer/common/` (data, normalizer, physics loss) and `3Dtransformer/vit/` (model, training, config):
   consumers of the output.
 - `sachin` branch, `fall26/preprocess_forecast_ds.py`: an earlier preprocessing script for a single-grid
   run. A useful template for the output format and multiprocessing; see section 5 for what not to reuse.

@@ -23,5 +23,5 @@ These are things to think about if we later train on several simulations.
   different resolutions would give patches of different physical size. Resample all systems onto a
   common spacing in (log r, θ, φ) during preprocessing.
 - **Code that assumes one grid:** the model builds its positional encoding once at startup,
-  `Fall26/vit/train.py` checks every dump against one geometry, and `PhysicsLoss3D` loads one geometry
+  `3Dtransformer/vit/train.py` checks every dump against one geometry, and `PhysicsLoss3D` loads one geometry
   file. Variable shapes also need batching by system, or padding with attention masks.

@@ -7,7 +7,7 @@ interpolate_var = 0, lowres = 1, no box). Fields should agree exactly and geomet
 precision. Run where pp is built (doc section 5):
 
     module load python && conda activate pp311
-    python Fall26/data/check_against_pp.py --pp-dir $SCRATCH/pp_rc300 --dump 3000
+    python 3Dtransformer/data/check_against_pp.py --pp-dir $SCRATCH/pp_rc300 --dump 3000
 """
 import argparse
 import os

@@ -1,10 +1,10 @@
 # Copyright (c) 2026 Kevin Fortune. All rights reserved.
 # Shared for review only; no license to use, copy, modify or distribute is granted. See LICENSE.
-"""Preprocess the rc300 H-AMR run into Fall26 training data.
+"""Preprocess the rc300 H-AMR run into training data for the 3D transformer.
 
 Reads H-AMR's raw output directly with numpy (pp is not needed), assembles the
 adaptive-mesh blocks onto one uniform grid at the finest refinement level,
-optionally coarsens and crops it, and writes what Fall26's training code reads:
+optionally coarsens and crops it, and writes what the 3D transformer's training code reads:
 
   <out_dir>/dump_<N>.npy            train and validation dumps, float32 (8, Nr, Ntheta, Nphi):
                                     rho, ug, utilde1-3, B1-3
@@ -18,12 +18,12 @@ optionally coarsens and crops it, and writes what Fall26's training code reads:
 
 Every decision is a setting in PREPROCESS; override any with --set KEY=VALUE (JSON).
 The raw format, the checks and the reasons for each setting are in
-Fall26/docs/rc300_preprocessing.md.
+3Dtransformer/docs/rc300_preprocessing.md.
 
 Test on a few dumps first (login node):
-    python Fall26/data/preprocess_rc300.py --set out_dir=$SCRATCH/rc300_test \
+    python 3Dtransformer/data/preprocess_rc300.py --set out_dir=$SCRATCH/rc300_test \
         --dumps 3000 3001 12635 --workers 3
-Full run: sbatch Fall26/scripts/preprocess_rc300_perlmutter.sbatch
+Full run: sbatch 3Dtransformer/scripts/preprocess_rc300_perlmutter.sbatch
 """
 import argparse
 import json
@@ -85,7 +85,7 @@ VEL_BAD_FRACTION = 1e-5   # a convention fits if at most this fraction of cells 
 # ---------------------------------------------------------------- settings and splits
 
 def parse_args(argv=None):
-    p = argparse.ArgumentParser(description="Preprocess the rc300 H-AMR run into Fall26 training data.")
+    p = argparse.ArgumentParser(description="Preprocess the rc300 H-AMR run into training data for the 3D transformer.")
     p.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
                    help="override a PREPROCESS setting; VALUE is JSON, e.g. r_max=null or theta_deg=[30,150]")
     p.add_argument("--dumps", type=int, nargs="+",
@@ -143,7 +143,7 @@ def plan_splits(s):
     split = {}
     for i, d in enumerate(dumps):
         split[d] = "train" if i < n_train else "val" if i < n_train + n_val else "test"
-    # Fall26/common/data.py keeps int((1 - val_frac) * n) of the train+val folder for training
+    # 3Dtransformer/common/data.py keeps int((1 - val_frac) * n) of the train+val folder for training
     m = n_train + n_val
     val_frac = n_val / m
     if int((1.0 - val_frac) * m) != n_train:

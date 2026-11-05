@@ -1,8 +1,8 @@
 # Reading the evaluation report
 
-`Fall26/eval/evaluate_vit.py` runs TRON's evaluation suite (`evaluate_forecast_ds.py`, copied from the
+`3Dtransformer/eval/evaluate_vit.py` runs TRON's evaluation suite (`evaluate_forecast_ds.py`, copied from the
 `sachin` branch) on a ViT checkpoint. With `--mode all` it prints about 15 tables to `out_res.txt` and
-saves 20-odd figures, all in `Fall26/outputs/<experiment>/seed<N>/eval/<checkpoint>_blind/`.
+saves 20-odd figures, all in `3Dtransformer/outputs/<experiment>/seed<N>/eval/<checkpoint>_blind/`.
 
 This guide explains what each table measures and how to read it, in the order worth reading them.
 The worked examples are TRON's own report (`fall26/eval_results_v3/out_res.txt` on the `sachin` branch:

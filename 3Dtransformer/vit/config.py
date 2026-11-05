@@ -5,9 +5,9 @@
 Every training run is one experiment, a named entry in EXPERIMENTS that holds all of its
 hyperparameters, and one seed. Outputs are named after both:
 
-    Fall26/outputs/<experiment>/seed<N>/                         training run
+    3Dtransformer/outputs/<experiment>/seed<N>/                         training run
         config.json, train.log, metrics.csv, latest.pth, best.pth
-    Fall26/outputs/<experiment>/seed<N>/eval/<checkpoint>_<split>/  evaluation of one checkpoint
+    3Dtransformer/outputs/<experiment>/seed<N>/eval/<checkpoint>_<split>/  evaluation of one checkpoint
         e.g. eval/best_blind/ = best.pth scored on the blind test set
 
 Never edit an experiment once it has runs; add a new entry instead. Training saves each
@@ -20,18 +20,18 @@ Physics settings (floors, loss weights) live in common/settings.py.
 import os
 from pathlib import Path
 
-FALL26_DIR = Path(__file__).resolve().parents[1]
+TRANSFORMER_DIR = Path(__file__).resolve().parents[1]
 # The preprocessed datasets live under GRMHD_DATA_ROOT. Keep them on fast (NVMe) storage: on Delta
 # it loads a batch in ~0.1 s against ~3.4 s from the HDD file system, where some GPU nodes also
-# returned I/O errors (2026-10-19). Fall26/docs/rc300_preprocessing.md
+# returned I/O errors (2026-10-19). 3Dtransformer/docs/rc300_preprocessing.md
 DATA_ROOT = os.environ.get("GRMHD_DATA_ROOT", "/path/to/fast_storage")
 DATA_5000RUN = f"{DATA_ROOT}/5000run/processed_forecast"
 DATA_RC300 = f"{DATA_ROOT}/rc300_reduced"
 
 # Where and how to run; these do not change what is trained. (The data is part of each experiment.)
 RUNTIME = {
-    # Fall26/outputs is a link to /path/to/work/fall26_outputs on Delta.
-    "out_dir": str(FALL26_DIR / "outputs"),
+    # 3Dtransformer/outputs is a link to /path/to/work/transformer_outputs on Delta.
+    "out_dir": str(TRANSFORMER_DIR / "outputs"),
     "num_workers": 4,           # data-loading processes per GPU
     "log_every": 50,            # batches between progress lines
     "max_batches": None,        # limit batches per epoch (smoke tests only)
@@ -119,12 +119,12 @@ def experiment_config(name=DEFAULT_EXPERIMENT):
 
 
 def run_dir(experiment, seed, out_dir=None):
-    """Fall26/outputs/<experiment>/seed<N>/"""
+    """3Dtransformer/outputs/<experiment>/seed<N>/"""
     return Path(out_dir or RUNTIME["out_dir"]) / experiment / f"seed{seed}"
 
 
 def eval_dir(experiment, seed, checkpoint="best", split="blind", out_dir=None):
-    """Fall26/outputs/<experiment>/seed<N>/eval/<checkpoint>_<split>/, e.g. eval/best_blind/"""
+    """3Dtransformer/outputs/<experiment>/seed<N>/eval/<checkpoint>_<split>/, e.g. eval/best_blind/"""
     return run_dir(experiment, seed, out_dir) / "eval" / f"{checkpoint}_{split}"
 
 

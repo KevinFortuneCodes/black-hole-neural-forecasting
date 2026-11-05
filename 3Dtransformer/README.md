@@ -1,4 +1,4 @@
-# Fall26
+# 3Dtransformer
 
 The transformer forecaster: the current model (the repository's top-level README has the overview).
 
@@ -34,7 +34,7 @@ docs/            rc300_preprocessing.md (data handoff), multi_system_notes.md,
                  reading_the_evaluation.md (what each table and figure of the evaluation means)
 scripts/         Delta job scripts; preprocess_rc300_perlmutter.sbatch (Perlmutter)
 smoke_test.py    synthetic checks (CPU) and --real (one GPU, real dumps)
-outputs/         link to /path/to/work/fall26_outputs (not in git)
+outputs/         link to /path/to/work/transformer_outputs (not in git)
 ```
 
 ## Experiments
@@ -72,16 +72,16 @@ Outputs are named after the experiment and seed:
 Run everything from the repo root.
 
 ```bash
-mkdir -p Fall26/outputs/slurm
+mkdir -p 3Dtransformer/outputs/slurm
 
 # Smoke test: synthetic checks, then timing and memory on real dumps (one GPU, a few minutes)
-sbatch Fall26/scripts/smoke_delta.sbatch
+sbatch 3Dtransformer/scripts/smoke_delta.sbatch
 
 # Train: experiment, seed, number of chained 48-hour jobs (each resumes from the last)
-Fall26/scripts/submit_chain.sh vit_baseline_v1 0 2
+3Dtransformer/scripts/submit_chain.sh vit_baseline_v1 0 2
 
 # Evaluate a run's best.pth on the blind test set (one GPU; results in outputs/<experiment>/seed<N>/eval/best_blind/)
-sbatch --job-name=eval_vit_rc300_v1_s0 --export=ALL,EXPERIMENT=vit_rc300_v1,SEED=0 Fall26/scripts/eval_delta.sbatch
+sbatch --job-name=eval_vit_rc300_v1_s0 --export=ALL,EXPERIMENT=vit_rc300_v1,SEED=0 3Dtransformer/scripts/eval_delta.sbatch
 ```
 
-Locally, `python Fall26/smoke_test.py` runs the synthetic checks on CPU in about 10 seconds.
+Locally, `python 3Dtransformer/smoke_test.py` runs the synthetic checks on CPU in about 10 seconds.

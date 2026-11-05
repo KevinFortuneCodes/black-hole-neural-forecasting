@@ -12,7 +12,7 @@ Vertical lines mark the epochs where terms switch on: ∇·B and mass-shell term
 first epoch with a nonzero curriculum weight and reach full weight at stable_epoch, where
 best.pth tracking starts. Every other term is on from epoch 0 (common/physics_loss.py).
 evaluate_vit.py runs this into the evaluation folder. On its own, from the repo root:
-    python Fall26/eval/plot_training.py --experiment vit_rc300_v1
+    python 3Dtransformer/eval/plot_training.py --experiment vit_rc300_v1
 """
 import argparse
 import csv
@@ -25,7 +25,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))   # make Fall26/ importable
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))   # make 3Dtransformer/ importable
 
 from common.settings import PHYSICS
 from vit.config import eval_dir, run_dir

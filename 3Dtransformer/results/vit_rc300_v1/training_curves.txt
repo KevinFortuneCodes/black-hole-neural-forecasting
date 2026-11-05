@@ -1,0 +1,12 @@
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/fig0_training_total.png
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/fig0_loss_components.png
+
+Training curves (reconstruction = fluid + magnetic, density-weighted MAE in normalized space)
+  92 epochs (0..91). On from epoch 0: reconstruction, gradients, spectrum, guards.
+  ∇·B and mass shells: off before epoch 11, ramping to full weight at epoch 30.
+  first epoch              recon train 0.2539  val 0.2533  val/train 1.00
+  epoch 30 (stable)        recon train 0.1544  val 0.1789  val/train 1.16
+  best.pth (epoch 71)      recon train 0.1074  val 0.1756  val/train 1.63
+  last epoch               recon train 0.1002  val 0.1763  val/train 1.76
+  val/train near 1: no overfitting. Rising while validation stays flat: the model keeps fitting the training dumps without forecasting new ones better.
+  total - recon (gradient, spectrum, ∇·B, mass, guards, weighted), epoch 30 -> last: train 0.1752 -> 0.1075, validation 0.1914 -> 0.2020

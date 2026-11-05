@@ -7,9 +7,14 @@ a simulation and predict the next one, fast enough to stand in for part of a run
 in-progress research by Kevin Fortune. It covers the whole path from raw simulation output to a
 trained, evaluated model on national HPC systems (NCSA Delta and NERSC Perlmutter).
 
+**Headline:** on a stretch of simulation it never saw, the current 3D transformer cuts one-step
+forecast error by a third relative to the "nothing changes" baseline, on every one of the 8 physical
+variables. It stays ahead of that baseline for about 13 steps when it feeds on its own predictions
+([results](#results)).
+
 | Model | Status | Where |
 |---|---|---|
-| **Vision transformer (ViT)** | Current model, under active development | [`3Dtransformer/`](3Dtransformer/) |
+| **Vision transformer (ViT)** | Current model, under active development | [`3Dtransformer/`](3Dtransformer/), results in [`3Dtransformer/results/`](3Dtransformer/results/) |
 | **Spherical Fourier neural operator (SFNO)** | **Retired** in favour of the transformer; kept with its evaluation results | [`SFNO/`](SFNO/), [`eval/`](eval/), [`eval_results/`](eval_results/) |
 
 ## The problem
@@ -37,6 +42,7 @@ changes), a baseline that is hard to beat when a single step changes little.
   eval/                 evaluation on a held-out test period, training-curve plots
   docs/                 data handoff notes, a guide to reading the evaluation report
   scripts/              Slurm job scripts (Delta, Perlmutter)
+  results/              evaluation of vit_rc300_v1 on the blind test period (report and figures)
   smoke_test.py         42 data-free checks of the model and training loop
 SFNO/                   the retired SFNO: model and training (train_forecast.py)
 eval/                   SFNO evaluation: tables, figures, rollouts
@@ -83,22 +89,63 @@ The engineering around the model is built for long runs on shared clusters:
   diagnostics. [`docs/reading_the_evaluation.md`](3Dtransformer/docs/reading_the_evaluation.md) explains
   how to read each table.
 
+### Results
+
+Run `vit_rc300_v1` (one seed) was scored on the blind test period: the last 964 snapshots of the
+simulation, never seen during training or checkpoint selection. The full report and all figures are
+in [`3Dtransformer/results/vit_rc300_v1/`](3Dtransformer/results/vit_rc300_v1/) (start with
+`out_res.txt`).
+
+| One step ahead (963 test pairs) | Transformer | Persistence |
+|---|---|---|
+| Error (nMAE, mean of the 8 variables) | **0.049** | 0.075 |
+| Skill: share of persistence's error removed | **33%** on average; 28–43% on every variable | |
+| Lowest 95% confidence bound on any variable's skill | 0.28 (bootstrap) | |
+
+- **Every variable beats the baseline.** The model removes 43% of persistence's error on gas
+  density, 37% on internal energy and 28–33% on each velocity and magnetic-field component. No
+  confidence interval reaches more than 0.02 from its estimate.
+- **Forecasts stay useful when the model feeds on its own output.** Over 10 rollouts of 50 steps,
+  the transformer stays ahead of persistence for about 13 steps on average (11–23 depending on the
+  variable). That is about 1,300 gravitational time units, 9–26 times as long as the flow itself
+  takes to decorrelate.
+- **Physically valid.** In a 50-step rollout no cell came close to the speed-of-light guard
+  (largest Lorentz factor 15, limit 50). The magnetic flux threading the black hole matched the
+  simulation within 1% after one step and 3% after ten.
+- **Fast.** 22.6 ms per step on one GPU; a 50-step forecast takes 1.1 s.
+
+![Transformer rollout error against persistence](3Dtransformer/results/vit_rc300_v1/fig4_rollout_analysis.png)
+
 ### Active areas of improvement
+
+The same evaluation shows where the model falls short. Each item below targets a weakness it
+measured.
 
 1. **Better normalization of vector fields.** Velocity and magnetic field are normalized one
    component at a time with arcsinh. In the outer region, where the fields are weak, arcsinh is
    nearly linear, so errors there barely register in the loss. Where a component changes sign,
-   arcsinh creates sharp jumps. The first alternative, now being tested, encodes each vector as
-   the log of its magnitude plus a unit direction (`vit_rc300_magdir_v1`). Candidates are kept to
-   transforms that act on each value alone, so a trained model is not tied to one grid.
+   arcsinh creates sharp jumps. The weak outer magnetic field is where long rollouts go most wrong
+   (below). The first alternative, now being tested, encodes each vector as the log of its
+   magnitude plus a unit direction (`vit_rc300_magdir_v1`). Candidates are kept to transforms that
+   act on each value alone, so a trained model is not tied to one grid.
 2. **A convolutional decoder.** Each token is decoded to its patch by one linear layer,
-   independently of its neighbours. That can leave seams at patch edges and limits fine-scale
-   detail. A convolutional decoder over the reassembled grid would let neighbouring patches inform
-   every output cell.
-3. **Predicting fluxes rather than differences.** The model predicts each cell's change directly.
-   Predicting the fluxes across cell faces instead mirrors how finite-volume solvers like the one
-   that produced the data work: whatever leaves one cell enters its neighbour. Conservation would
-   then hold by construction instead of being encouraged by a penalty in the loss.
+   independently of its neighbours. That leaves a blocky texture at patch edges (visible below)
+   and too much power at small scales. A convolutional decoder over the reassembled grid would let
+   neighbouring patches inform every output cell.
+3. **Predicting fluxes rather than differences.** The model predicts each cell's change directly,
+   so nothing forces what leaves one cell to enter its neighbour, and conserved quantities such as
+   total mass drift over long rollouts. Predicting the fluxes across cell faces instead mirrors how
+   finite-volume solvers like the one that produced the data work: conservation would then hold by
+   construction instead of being encouraged by a penalty in the loss.
+
+Generalization is also on the list: validation error stops improving around epoch 40 while
+training error keeps falling.
+
+![Density and magnetic field after a 50-step rollout: truth, forecast, error](3Dtransformer/results/vit_rc300_v1/fig8_meridional_slice.png)
+
+*After 50 steps the density field (top) is still close to the truth. The weak outer magnetic field
+(bottom) is several orders of magnitude off and shows the patch grid: the targets of items 1
+and 2.*
 
 ## The SFNO (retired)
 

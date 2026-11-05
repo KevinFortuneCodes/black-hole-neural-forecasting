@@ -1,0 +1,30 @@
+{
+  "args": {
+    "mode": "all",
+    "start": 11672,
+    "max_steps": 50,
+    "n_starts": 10,
+    "seed": 42,
+    "save_dir": "3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind",
+    "data_dir": "/path/to/fast_storage/rc300_reduced/blind",
+    "geometry_file": "/path/to/fast_storage/rc300_reduced/geometry.npz",
+    "model_path": "3Dtransformer/outputs/vit_rc300_v1/seed0/best.pth"
+  },
+  "data_dir": "/path/to/fast_storage/rc300_reduced/blind",
+  "geometry_file": "/path/to/fast_storage/rc300_reduced/geometry.npz",
+  "model_path": "3Dtransformer/outputs/vit_rc300_v1/seed0/best.pth",
+  "device": "cuda",
+  "dump_count": 964,
+  "grid_shape": [
+    112,
+    48,
+    96
+  ],
+  "eos_gamma": 1.6666666666666667,
+  "dt_dump": 100.0,
+  "spin": 0.94,
+  "rin": 1.0997630425914044,
+  "rout": 1000000.0,
+  "seed": 42,
+  "log_file": "3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/out_res.txt"
+}

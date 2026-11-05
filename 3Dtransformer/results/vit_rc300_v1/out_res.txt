@@ -1,0 +1,284 @@
+Auto-selected start dump: 11672
+Device: cuda
+Automatic logging enabled -> 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/out_res.txt
+Building shared pipeline...
+Loaded 63.55M-param ViT checkpoint 3Dtransformer/outputs/vit_rc300_v1/seed0/best.pth (epoch 72, best val recon 0.1755664679893947)
+
+============================================================================
+ Table 1: Single-Step Accuracy on Blind Test Dumps (963 pairs, n_eff=482)
+============================================================================
+Channel       nMAE ViT   Rel L1 ViT  nMAE persist  Skill SS           95% CI
+----------------------------------------------------------------------------
+rho             0.0696       0.2425        0.1222     0.431 [ 0.429, 0.441]
+ug              0.1183       0.6930        0.1878     0.370 [ 0.366, 0.377]
+utilde_r        0.0046       0.0672        0.0066     0.295 [ 0.285, 0.304]
+utilde_th       0.0021       0.4242        0.0031     0.321 [ 0.311, 0.334]
+utilde_ph       0.0089       0.0696        0.0131     0.316 [ 0.306, 0.327]
+B_r             0.0509       0.0589        0.0711     0.284 [ 0.276, 0.301]
+B_th            0.0482       0.2473        0.0720     0.331 [ 0.318, 0.344]
+B_ph            0.0880       0.0857        0.1264     0.303 [ 0.290, 0.313]
+----------------------------------------------------------------------------
+Mean            0.0488       0.2360        0.0753     0.331                —
+
+  Fluid (0-4): nMAE 0.0407
+  Magnetic (5-7): nMAE 0.0624
+  95% bootstrap CI (paired, B=5000, seed 42, stride-2 thinned n_eff=482 from 963 pairs) on channel skill scores.
+  Mean row: unweighted channel mean (CI-free; channel metrics have disparate units/scales).
+  Rollout curve: evaluating 10 starts up to 50 steps.
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/fig4_rollout_analysis.png
+
+  Attractor saturation (t=50): model nMAE vs data sigma per channel (diagnostic proxy)
+    rho        sat 0.3580  sigma 1.0741  OK (typical set)
+    ug         sat 0.3805  sigma 1.3319  OK (typical set)
+    utilde_r   sat 0.0153  sigma 0.1565  OK (typical set)
+    utilde_th  sat 0.0066  sigma 0.0126  OK (typical set)
+    utilde_ph  sat 0.0270  sigma 0.2379  OK (typical set)
+    B_r        sat 0.1746  sigma 1.6125  OK (typical set)
+    B_th       sat 0.1011  sigma 0.5099  OK (typical set)
+    B_ph       sat 0.2442  sigma 1.8403  OK (typical set)
+  Note: data sigma is normalized-space standard deviation; comparison serves as an attractor boundedness proxy.
+
+==================================================
+ Computational Cost
+==================================================
+  Total parameters:     63,545,344 (63.55M)
+  Inference time:       22.6 ms/step (cuda)
+  Physical time/step:   100.0 R_g/c (from geometry dt_dump)
+  Forecast of 50 steps: 1.1 s
+
+================================================================================================================================================
+ Table 2: Physics Consistency (ViT vs solver truth across horizons)
+================================================================================================================================================
+Steps    sl-err M    sl-err E    sl-err L    |divB| pred   |divB| truth   norm-divB pred   norm-divB truth     flux pred    flux truth   gmax pred
+------------------------------------------------------------------------------------------------------------------------------------------------
+  [Flux Balance] Active disk qualifying cells: 105120
+    1      0.0266      0.4568      4.5169     1.3859e+00     2.3615e+00       5.0863e+00        4.0462e+00    1.0128e+01    1.0271e+01       10.69
+      [norm-divB transition] step  1: disk 5.0863e+00/4.0462e+00 | global 7.3426e+01/1.0390e+01
+   10      0.1033      1.7825     13.1973     1.9181e+00     2.2680e+00       1.0070e+01        4.2202e+00    1.5538e+01    1.2530e+01        6.69
+      [norm-divB transition] step 10: disk 1.0070e+01/4.2202e+00 | global 8.3862e+01/9.9923e+00
+   25      0.2869      3.1783     14.3209     3.3826e+00     2.1818e+00       1.1801e+01        4.1029e+00    2.6502e+01    2.3009e+01       10.30
+      [norm-divB transition] step 25: disk 1.1801e+01/4.1029e+00 | global 8.7353e+01/1.0276e+01
+   50      0.6124      3.8728     12.1599     5.8455e+00     2.2877e+00       1.2646e+01        3.8380e+00    5.2459e+01    1.2810e+01       15.23
+      [norm-divB transition] step 50: disk 1.2646e+01/3.8380e+00 | global 9.0494e+01/9.9984e+00
+
+  Init (t=0): |divB| = 1.9071e+00 [code units], norm-divB disk = 4.0924e+00 (global = 1.0496e+01)
+  Note on training loss terms vs out-of-sample diagnostics:
+    - sl-err M: Rest-mass shell profile error (ONLY conserved shell term in ViT training loss, w=0.03).
+    - sl-err E, L: Conserved energy & angular momentum transport (OUT-OF-SAMPLE physical evaluation).
+    - Note: E/L are out-of-sample with shell magnitudes ~1e3-1e5, so sl-err values are not comparable to M's scale.
+    - |divB|: Volume-averaged physical divergence mean(|div B|) [code units] (training loss term, w=0.10).
+    - norm-divB: Normalized solenoidal residual mean(|div B| * Delta x_local / |B|_local) in active disk [dimensionless; global printed alongside as transition aid].
+    - flux: Local cellwise continuity residual (sampled from active-disk cells, out-of-sample physical evaluation; absolute scale is snapshot-sampling error over dt=25 Rg/c; the model≈truth ratio is the result).
+    - gmax: Max pre-clamp Lorentz factor gamma = alpha * u^0 (guards loss term, w=0.10).
+  Fig 5: -E(r) bounds: max=4.676e+06, p99.8=3.266e+06 -> adopted ylim=(3.343e+03, 1.000e+05), negative_shells=0
+  Fig 5: L(r) bounds: max=2.777e+07, p99.8=2.074e+07 -> adopted ylim=(1.422e+04, 1.000e+06), negative_shells=16
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/fig5_conserved_shells.png
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/fig6_windowed_spectra.png
+  Fig 6: Folded radial spectra (|k| in [1, 56]):
+    rho power ratio: mean=2.404, median=1.145, range=[0.303, 18.859]
+    B^r power ratio: mean=1.582, median=1.162, range=[0.244, 5.178]
+  Note: Single-snapshot radial spectra (unweighted cell-mean spectra, relative comparison only; T(k) masked at truth power < p10).
+  Fig 7: Mdot y-symlog linthresh=100.0, yticks=[-1000000.0, -100000.0, -10000.0, -1000.0, -100.0, 0.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0]
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/fig7_mdot_profile.png
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/temporal_consistency.png
+  Final drift (model / solver truth):
+    M (scale |M0|):       1.268e+00 / 2.290e-04
+    E (scale |E0|):   3.885e+04 / 2.673e-02
+    L (scale |L0|): 3.341e+03 / 6.272e-03
+
+============================================================
+ Lorentz Validity (pre-clamp gamma = alpha * u^0)
+============================================================
+  Truth t=0: max 12.378 | p99.9 3.154 | > 18: 0 cells | > max_gamma(50): 0
+  Rollout (50 steps): max gamma 15.259 (step 44) | max p99.9 9.344 | Lorentz clamp fires 0
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/spatial_error_fluid.png
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/spatial_error_mag.png
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/statistical_props_pdf.png
+
+============================================================
+ Statistical Properties (25 steps, shared-bin JS divergence)
+============================================================
+  Channel        JS Div    Pred Mean    True Mean
+  rho            0.0093   9.4832e+01   6.1374e+01
+  ug             0.0058   1.0954e+01   8.6897e+00
+  utilde_r       0.0221   7.7009e-02   7.2586e-02
+  utilde_th      0.1439  -8.4358e-04  -5.7453e-04
+  utilde_ph      0.0183   1.4512e-01   1.3673e-01
+  B_r            0.0142   2.3585e-01   8.9007e-02
+  B_th           0.0182   1.9781e-01   1.3942e-01
+  B_ph           0.0106   2.3823e-01   3.9050e-01
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/fig8_meridional_slice.png
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/fig8_meridional_slice_r100.png
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/fig8_meridional_slice_r250.png
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/error_correlation_matrix.png
+
+==============================================================================
+ Table 4: Predictability Horizon (ViT vs data decorrelation)
+==============================================================================
+Channel       tau_c [dump / Rg/c]   skill<0 at   horizon/tau_c   horizon [Rg/c]
+------------------------------------------------------------------------------
+rho                   1.00 / 99.9           18           18.02           1800.0
+ug                   1.05 / 104.7           23           21.98           2300.0
+utilde_r             1.17 / 116.7           11            9.42           1100.0
+utilde_th             0.56 / 55.9           12           21.45           1200.0
+utilde_ph             0.83 / 82.7           13           15.72           1300.0
+B_r                   0.62 / 62.4           16           25.64           1600.0
+B_th                  0.50 / 49.8           13           26.11           1300.0
+B_ph                  0.60 / 60.1           13           21.64           1300.0
+
+  Re-crossing channels (positive skill reappears after first crossing): rho (cross=18, last_pos=21, frac_pos=0.03), utilde_th (cross=12, last_pos=21, frac_pos=0.03), utilde_ph (cross=13, last_pos=22, frac_pos=0.05), B_th (cross=13, last_pos=32, frac_pos=0.41), B_ph (cross=13, last_pos=22, frac_pos=0.22)
+
+  tau_c = lag-1 decorrelation time of TRUTH fluctuations (active disk, * = saturated r1>0.99);
+  'skill<0 at' = first step model stops beating persistence; horizon = crossing * dt_dump (100 Rg/c).
+  Note: skill evaluated vs persistence baseline on normalized representations; tau_c is linear-correlation proxy;
+  horizon/tau_c ratio is illustrative when tau_c ~ O(1 dump) or saturated-* (sub-unity ratios expected there).
+  Fig 10: Rotation curve adopted ylim=(1.00e-05, 1.00e+00) (data min=9.84e-05, max=3.81e-01)
+  Fig 10: Plasma beta adopted ylim=(-0.20, 1.96)
+  Fig 10: Magnetization adopted ylim=(-3.57, -0.33)
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/fig10_mean_profiles.png
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/fig10_mean_profiles_full.png
+
+  Rotation curve check (Omega [c/Rg] at r = 10/30/100):
+    truth:  0.0158 / 0.0027 / 0.0003
+    ViT:     0.0171 / 0.0030 / -0.0000
+    Keplerian: 0.0305 / 0.0060 / 0.0010
+  log10 beta at r=10/30/100: truth 1.30/1.24/0.90 | forecast 1.19/1.07/0.27
+
+========================================================================================
+ Table 5: Mass Conservation Closure dM_enc/dt vs Mdot(100) - Mdot(r_H) (r in [1.34, 100] Rg, physical code units)
+========================================================================================
+Quantity                                        ViT   solver truth
+------------------------------------------------------------------
+<|dM_enc/dt|> [code units]               2.5112e+03     1.2503e+03
+<|Mdot_rH|> [code units]                 1.5112e+04     8.2523e+03
+<|Mdot_100|> [code units]                1.5580e+04     2.3540e+03
+<imbalance> / RMS(Mdot)                  1.8498e+00     9.8748e-01
+max imbalance / RMS(Mdot)                2.1697e+00     1.4568e+00
+
+  Note: Full physical units applied: M_enc * (dx1*dx2*dx3), Mdot * (dx2*dx3).
+  imbalance = |dM_enc/dt - (Mdot_100 - Mdot_rH)| / RMS(Mdot_rH, Mdot_100).
+  measured truth imbalance is 9.875e-01 (max 1.457e+00) on [r_H, 100] Rg.
+  Residual is the discrete snapshot sampling floor (dt=100 Rg/c spans ~2.5 inner orbits),
+  not a PDE violation. Model is NOT trained on this constraint; truth sets the baseline.
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/fig11_structure_functions.png
+
+==============================================================================
+ Structure-Function Scaling Exponents (r-direction, lag = Delta ln r, active disk r in [2, 100] Rg)
+==============================================================================
+Channel      zeta2 p (R2)   zeta2 t (R2)  zeta3 p  zeta3 t  zeta4 p  zeta4 t  S3 (tentative)
+------------------------------------------------------------------------------
+$\rho$       0.785 (0.88)   0.932 (1.00)    1.017    1.012    1.268    1.026 +7.74e-06/+3.30e-02
+$u^\varphi$   0.312 (0.26)   1.344 (1.00)    0.454    1.897    0.572    2.397 -2.67e-04/-3.67e-04
+$B^r$        1.524 (1.00)   0.982 (0.99)    2.162    1.001    2.682    0.959 -2.68e-02/-5.71e-02
+
+  Note: Evaluated on normalized representation in the active disk (r in [2, 100] Rg, |theta-pi/2| < 0.3).
+  Log-spaced radial grid implies cell lag represents lag = Delta ln r.
+  Turbulent scaling exponents characterize intermittency (Kolmogorov incompressible HD reference is zeta_3=1;
+  compressible GRMHD disks exhibit distinct magnetic scaling with shallower slopes).
+  S3 sign is reported tentatively due to anisotropic/non-homogeneous accretion geometry.
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/fig12_azimuthal_spectra.png
+
+======================================================================
+ Azimuthal Power Ratio (Pred / Truth) across Horizons (m = [1, 2, 3, 4, 5, 6, 7, 8]):
+======================================================================
+  --- Horizon h=10 (t+10) ---
+    $\rho$      : m=1 0.682 | m=2 0.393 | m=3 0.316 | m=4 1.016 | m=5 1.032 | m=6 0.611 | m=7 0.778 | m=8 0.545
+      High-m fraction (m > 24): pred=0.087, truth=0.039
+    $u^\varphi$ : m=1 0.615 | m=2 0.679 | m=3 0.571 | m=4 0.466 | m=5 0.477 | m=6 0.855 | m=7 0.942 | m=8 1.229
+      High-m fraction (m > 24): pred=0.055, truth=0.018
+    $B^r$       : m=1 0.466 | m=2 0.467 | m=3 0.247 | m=4 0.117 | m=5 0.434 | m=6 0.156 | m=7 0.256 | m=8 0.352
+      High-m fraction (m > 24): pred=0.111, truth=0.038
+  --- Horizon h=25 (t+25) ---
+    $\rho$      : m=1 0.433 | m=2 0.155 | m=3 0.120 | m=4 0.168 | m=5 0.105 | m=6 0.075 | m=7 0.152 | m=8 0.189
+      High-m fraction (m > 24): pred=0.134, truth=0.033
+    $u^\varphi$ : m=1 0.598 | m=2 0.190 | m=3 0.131 | m=4 0.222 | m=5 0.066 | m=6 0.288 | m=7 0.262 | m=8 0.188
+      High-m fraction (m > 24): pred=0.055, truth=0.014
+    $B^r$       : m=1 1.191 | m=2 0.111 | m=3 0.104 | m=4 0.191 | m=5 0.167 | m=6 0.221 | m=7 0.147 | m=8 0.106
+      High-m fraction (m > 24): pred=0.126, truth=0.078
+  --- Horizon h=50 (t+50) ---
+    $\rho$      : m=1 0.515 | m=2 0.522 | m=3 0.402 | m=4 0.268 | m=5 0.225 | m=6 0.171 | m=7 0.206 | m=8 0.179
+      High-m fraction (m > 24): pred=0.254, truth=0.027
+    $u^\varphi$ : m=1 3.536 | m=2 1.608 | m=3 1.942 | m=4 0.720 | m=5 0.778 | m=6 0.851 | m=7 1.086 | m=8 0.883
+      High-m fraction (m > 24): pred=0.062, truth=0.014
+    $B^r$       : m=1 0.614 | m=2 0.086 | m=3 0.185 | m=4 0.156 | m=5 0.266 | m=6 0.210 | m=7 0.092 | m=8 0.082
+      High-m fraction (m > 24): pred=0.119, truth=0.030
+
+  Note: Azimuthal spectra in equatorial band (unweighted cell-mean spectra, relative comparison only; ratios masked at truth power < p10).
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/fig13_coherence.png
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/fig14_error_decomposition.png
+  Fig 14: Percentiles evaluated on active disk (1110 cells, r <= 100 Rg, |theta-pi/2| < 0.5), zoom=(0, 100) x (-100, 100)
+
+  Mean |bias| / RMSE per channel (systematic vs total error):
+    rho        |bias| 4.9151e+00  RMSE 1.3980e+01  (bias fraction 0.35)
+    ug         |bias| 6.6022e+00  RMSE 1.0956e+01  (bias fraction 0.60)
+    utilde_r   |bias| 1.0093e-03  RMSE 2.7231e-03  (bias fraction 0.37)
+    utilde_th  |bias| 1.8495e-04  RMSE 5.4148e-04  (bias fraction 0.34)
+    utilde_ph  |bias| 1.6332e-03  RMSE 4.2645e-03  (bias fraction 0.38)
+    B_r        |bias| 5.7729e-02  RMSE 2.8835e-01  (bias fraction 0.20)
+    B_th       |bias| 6.3924e-03  RMSE 2.9393e-02  (bias fraction 0.22)
+    B_ph       |bias| 9.1241e-02  RMSE 4.8643e-01  (bias fraction 0.19)
+
+======================================================================
+ Table 7: Stability — Empirical Lipschitz Constant (normalized space)
+======================================================================
+  Single-step Lipschitz L (1e-3 relative perturbation, 10/10 draws): 10.561 +/- 3.048
+  Status: Expansive (L = 10.561 > 2.0)
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/fig16_rollout_evolution.png
+  Fig 16: Percentiles evaluated on active disk (1110 cells, r <= 100 Rg, |theta-pi/2| < 0.5), zoom=(0, 100) x (-100, 100)
+
+===========================================================================
+ Temporal Power Spectrum P(f) across 50 dumps (steps 1..50, dt = 100.0 Rg/c)
+  Domains: disk r in [5.0, 100.0] Rg (|theta-pi/2| < 0.3, 42336 cells), jet r in [2.0, 100.0] Rg (|theta-pi/2| > 1.0, sigma > 1, 86950 cells)
+===========================================================================
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/temporal_power_spectrum.png
+  Note: Single-rollout temporal PSD; spectral variance per frequency bin is order-unity (no ensemble Welch averaging).
+
+============================================================================
+ Table 8: Magnetic Flux Threading (pred vs solver truth; full-sphere Phi)
+============================================================================
+Steps         Phi(r_H) p/t          Phi(10) p/t    rel err r_H   rel err r=10
+----------------------------------------------------------------------------
+    1 1.532e+03/1.546e+03 1.776e+03/1.899e+03      9.119e-03      6.485e-02
+   10 1.779e+03/1.732e+03 2.056e+03/2.072e+03      2.663e-02      7.828e-03
+   25 1.974e+03/1.302e+03 2.379e+03/1.881e+03      5.165e-01      2.648e-01
+   50 2.347e+03/1.763e+03 2.868e+03/2.118e+03      3.312e-01      3.537e-01
+
+==========================================================================================================
+ Table 9: Jet Power & Horizon Flux (BZ funnel at r_H = 1.341 R_g; phi_BH uses 1/2 Phi)
+==========================================================================================================
+Steps    fill p/t        Pjet(r_H) p/t            eta p/t    phi_BH(r_H) p/t   rel err Pjet    rel err phi
+----------------------------------------------------------------------------------------------------------
+    1 0.000/0.000 -0.000e+00/-0.000e+00 -0.000e+00/n/a       8.031e+00/8.041e+00            n/a      1.340e-03
+   10 0.000/0.000 -0.000e+00/-0.000e+00 -0.000e+00/n/a       8.595e+00/9.184e+00            n/a      6.414e-02
+   25 0.000/0.000 -0.000e+00/-0.000e+00 -0.000e+00/n/a       8.618e+00/8.134e+00            n/a      5.954e-02
+   50 0.000/0.000 -0.000e+00/-0.000e+00 -0.000e+00/n/a       6.806e+00/9.368e+00            n/a      2.735e-01
+
+  Note: fill p/t = funnel mask fill fraction (sigma>1 & |theta-pi/2|>1.0) at r_H; phi_BH uses hemisphere flux (1/2) Phi(r_H);
+  Pjet is signed net outward energy flux (rel err & eta truth reported as n/a when |truth| < 1e-12).
+
+  Mdot(t) at r_H: Pearson r(model, truth) = -0.159 (n=50 steps, dt=100 R_g/c)
+    model: mean 1.5112e+04 std 5.4750e+03 | truth: mean 8.2523e+03 std 9.6326e+02
+
+  Mdot(t) at r10: Pearson r(model, truth) = 0.054 (n=50 steps, dt=100 R_g/c)
+    model: mean 2.0960e+03 std 1.2689e+03 | truth: mean 2.0934e+03 std 1.0268e+03
+  Fig 18: P_jet bounds: max=6.959e+04, p99.8=6.337e+04, most_negative=0.000e+00 -> adopted ylim=(1.000e+01, 6.971e+04), linthresh=1.0e+01, negative_shells=0
+
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/fig18_accretion_diagnostics.png
+
+==============================================================================
+ Conditional Error: nMAE by truth-magnitude quintile (normalized space, global edges)
+==============================================================================
+Channel    b1(low->high)  b2(low->high)  b3(low->high)  b4(low->high)  b5(low->high)
+------------------------------------------------------------------------------
+rho               0.0776         0.0318         0.0531         0.0806         0.1048
+ug                0.0462         0.0736         0.1167         0.1502         0.2045
+utilde_r          0.0000         0.0002         0.0028         0.0071         0.0130
+utilde_th         0.0000         0.0002         0.0011         0.0029         0.0063
+utilde_ph         0.0001         0.0005         0.0051         0.0177         0.0214
+B_r               0.0002         0.0008         0.0099         0.0917         0.1522
+B_th              0.0002         0.0006         0.0054         0.0394         0.1958
+B_ph              0.0002         0.0017         0.0288         0.1657         0.2452
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/fig19_conditional_error.png
+Saved: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind/evaluation_card.json
+
+Done. All figures in: 3Dtransformer/outputs/vit_rc300_v1/seed0/eval/best_blind

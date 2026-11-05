@@ -124,8 +124,8 @@ measured.
 1. **Better normalization of vector fields.** Velocity and magnetic field are normalized one
    component at a time with arcsinh. In the outer region, where the fields are weak, arcsinh is
    nearly linear, so errors there barely register in the loss. Where a component changes sign,
-   arcsinh creates sharp jumps. The weak outer magnetic field is where long rollouts go most wrong
-   (below). The first alternative, now being tested, encodes each vector as the log of its
+   arcsinh creates sharp jumps. Regions of weak magnetic field are where long rollouts go most
+   wrong (below). The first alternative, now being tested, encodes each vector as the log of its
    magnitude plus a unit direction (`vit_rc300_magdir_v1`). Candidates are kept to transforms that
    act on each value alone, so a trained model is not tied to one grid.
 2. **A convolutional decoder.** Each token is decoded to its patch by one linear layer,
@@ -141,11 +141,13 @@ measured.
 Generalization is also on the list: validation error stops improving around epoch 40 while
 training error keeps falling.
 
-![Density and magnetic field after a 50-step rollout: truth, forecast, error](3Dtransformer/results/vit_rc300_v1/fig8_meridional_slice.png)
+![Density and magnetic field within r = 100 after a 50-step rollout: truth, forecast, error](3Dtransformer/results/vit_rc300_v1/fig8_meridional_slice_r100.png)
 
-*After 50 steps the density field (top) is still close to the truth. The weak outer magnetic field
-(bottom) is several orders of magnitude off and shows the patch grid: the targets of items 1
-and 2.*
+*The inner 100 gravitational radii after a 50-step rollout: truth, forecast and error. The density
+(top) keeps the disk and the near-empty polar funnel, with the largest errors along the funnel
+wall. The magnetic field (bottom) stays close to the truth near the black hole, but where the field
+is weak it is 2–3 orders of magnitude too strong. Its errors also follow the 4 × 4 × 4 patch grid.
+These are the targets of items 1 and 2.*
 
 ## The SFNO (retired)
 
